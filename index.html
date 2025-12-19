@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI-powered transport delay prediction tool for estimating trip delays based on route, weather, and passenger data">
+  <title>Transport Delay Predictor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- Configure API URL here if needed -->
+  <!-- <script>window.API_BASE_URL = 'http://your-api-url:5000';</script> -->
+</head>
+<body>
+  <!-- Skip to main content link for accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <span class="icon" aria-hidden="true">🚌</span>
+        <div>
+          <h1>Transport Delay Predictor</h1>
+          <p class="subtitle">AI-Powered Delay Time Estimation</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="main-content">
+    <div class="container">
+      <div class="grid">
+        
+        <!-- Input Form Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Trip Details</h2>
+            <p>Enter your transport information</p>
+          </div>
+          
+          <!-- Dataset Upload Section -->
+          <div class="upload-section" id="uploadSection">
+            <h3>Upload Dataset (Optional)</h3>
+            <p class="helper-text">Upload your own dataset to train models</p>
+            <div class="file-upload">
+              <input type="file" id="datasetUpload" accept=".csv" aria-label="Upload dataset CSV file">
+              <label for="datasetUpload" class="file-upload-label">
+                <span class="upload-icon">📁</span>
+                <span>Choose CSV file</span>
+              </label>
+              <span class="file-name" id="fileName">No file selected</span>
+            </div>
+            <button type="button" class="btn-secondary" id="uploadBtn" disabled>
+              Upload & Train Models
+            </button>
+            <div id="uploadStatus" class="upload-status"></div>
+          </div>
+          
+          <hr class="divider" aria-hidden="true">
+          
+          <!-- Model Selection -->
+          <div class="model-selection">
+            <label for="modelSelect">Select ML Algorithm:</label>
+            <select id="modelSelect" name="modelSelect" aria-describedby="modelSelect-help">
+              <option value="gradient_boosting" selected>Gradient Boosting (Best)</option>
+              <option value="random_forest">Random Forest</option>
+              <option value="linear_regression">Linear Regression</option>
+              <option value="knn">k-Nearest Neighbors</option>
+            </select>
+            <span class="helper-text" id="modelSelect-help">Choose which algorithm to use for predictions</span>
+          </div>
+          
+          <hr class="divider" aria-hidden="true">
+          
+          <form id="predictionForm" class="form" novalidate>
+            
+            <!-- Route ID -->
+            <div class="form-group">
+              <label for="routeId">Route ID</label>
+              <input 
+                type="number" 
+                id="routeId" 
+                name="routeId"
+                placeholder="e.g., 3"
+                min="1"
+                max="10"
+                required
+                aria-describedby="routeId-help"
+              >
+              <span class="helper-text" id="routeId-help">Select route number (1-10)</span>
+              <span class="error-message" id="routeId-error" role="alert"></span>
+            </div>
+
+            <!-- Weather -->
+            <div class="form-group">
+              <label for="weather">Weather Condition</label>
+              <select id="weather" name="weather" required aria-describedby="weather-help">
+                <option value="clear">☀️ Clear</option>
+                <option value="cloudy" selected>☁️ Cloudy</option>
+                <option value="rainy">🌧️ Rainy</option>
+                <option value="snowy">❄️ Snowy</option>
+              </select>
+              <span class="helper-text" id="weather-help">Select current weather condition</span>
+              <span class="error-message" id="weather-error" role="alert"></span>
+            </div>
+
+            <!-- Passenger Count -->
+            <div class="form-group">
+              <label for="passengers">Passenger Count</label>
+              <div class="number-input">
+                <button type="button" class="btn-decrement" aria-label="Decrease passenger count">-</button>
+                <input 
+                  type="number" 
+                  id="passengers" 
+                  name="passengers"
+                  value="100"
+                  min="0"
+                  max="500"
+                  step="10"
+                  required
+                  aria-describedby="passengers-help"
+                >
+                <button type="button" class="btn-increment" aria-label="Increase passenger count">+</button>
+              </div>
+              <span class="helper-text" id="passengers-help">Approximate number of passengers</span>
+              <span class="error-message" id="passengers-error" role="alert"></span>
+            </div>
+
+            <!-- Time of Day -->
+            <div class="form-group">
+              <fieldset>
+                <legend>Time of Day</legend>
+                <div class="radio-group" role="radiogroup" aria-label="Time of day">
+                  <label class="radio-button">
+                    <input type="radio" name="timeOfDay" value="0" checked>
+                    <span>Morning (6-12)</span>
+                  </label>
+                  <label class="radio-button">
+                    <input type="radio" name="timeOfDay" value="1">
+                    <span>Afternoon (12-18)</span>
+                  </label>
+                  <label class="radio-button">
+                    <input type="radio" name="timeOfDay" value="2">
+                    <span>Evening (18-24)</span>
+                  </label>
+                  <label class="radio-button">
+                    <input type="radio" name="timeOfDay" value="3">
+                    <span>Night (0-6)</span>
+                  </label>
+                </div>
+              </fieldset>
+            </div>
+
+            <!-- Weekend Toggle -->
+            <div class="form-group">
+              <label class="toggle-label">
+                <span>Weekend Trip</span>
+                <label class="toggle">
+                  <input type="checkbox" id="isWeekend" name="isWeekend" aria-label="Weekend trip">
+                  <span class="toggle-slider"></span>
+                </label>
+              </label>
+              <span class="helper-text">Toggle for weekend trips</span>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-primary" id="submitBtn">
+              <span>Predict Delay</span>
+              <span class="icon" aria-hidden="true">→</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Results Card -->
+        <div class="card results-card" id="resultsCard">
+          <div class="card-header success">
+            <span class="icon" aria-hidden="true">✓</span>
+            <h2>Prediction Complete</h2>
+          </div>
+          
+          <div class="result-content" aria-live="polite">
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState">
+              <span class="empty-icon" aria-hidden="true">📊</span>
+              <p>Enter trip details and click predict to see results</p>
+            </div>
+
+            <!-- Loaded State (hidden initially) -->
+            <div class="loaded-state" id="loadedState" style="display: none;">
+              <!-- Primary Result -->
+              <div class="primary-result">
+                <p class="label">Predicted Delay</p>
+                <p class="value" id="delayValue">--</p>
+              </div>
+
+              <hr class="divider" aria-hidden="true">
+
+              <!-- Trip Summary -->
+              <div class="summary">
+                <h3>Trip Summary</h3>
+                <div class="summary-item">
+                  <span class="label">Route:</span>
+                  <span class="value" id="summaryRoute">--</span>
+                </div>
+                <div class="summary-item">
+                  <span class="label">Weather:</span>
+                  <span class="value" id="summaryWeather">--</span>
+                </div>
+                <div class="summary-item">
+                  <span class="label">Passengers:</span>
+                  <span class="value" id="summaryPassengers">--</span>
+                </div>
+                <div class="summary-item">
+                  <span class="label">Time:</span>
+                  <span class="value" id="summaryTime">--</span>
+                </div>
+                <div class="summary-item">
+                  <span class="label">Day Type:</span>
+                  <span class="value" id="summaryDayType">--</span>
+                </div>
+              </div>
+
+              <hr class="divider" aria-hidden="true">
+
+              <!-- Model Info -->
+              <div class="model-info">
+                <h3>Model Information</h3>
+                <p><strong>Model:</strong> <span id="modelName">--</span></p>
+                <p><strong>Accuracy:</strong> ±<span id="modelMAE">--</span> minutes</p>
+              </div>
+
+              <!-- Model Comparison -->
+              <div class="model-comparison" id="modelComparison" style="display: none;">
+                <hr class="divider" aria-hidden="true">
+                <h3>Model Comparison</h3>
+                <div class="comparison-table-container">
+                  <table class="comparison-table" id="comparisonTable">
+                    <thead>
+                      <tr>
+                        <th>Algorithm</th>
+                        <th>MAE</th>
+                        <th>RMSE</th>
+                        <th>R²</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="comparisonTableBody">
+                      <!-- Will be populated by JavaScript -->
+                    </tbody>
+                  </table>
+                </div>
+                <button type="button" class="btn-secondary" id="viewComparisonBtn">
+                  View Full Comparison
+                </button>
+              </div>
+
+              <!-- Feature Importance (Optional) -->
+              <div class="feature-importance" id="featureImportance" style="display: none;">
+                <hr class="divider" aria-hidden="true">
+                <h3>Feature Importance</h3>
+                <div class="importance-chart" id="importanceChart"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>Developed to DR Yasser Dahab , ENG bahaa </p>
+    </div>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,12 @@
+{
+  "feature_names": [
+    "route_id",
+    "passenger_count",
+    "time_of_day",
+    "is_weekend",
+    "weather_clear",
+    "weather_cloudy",
+    "weather_rainy"
+  ],
+  "target": "delay_minutes"
+}

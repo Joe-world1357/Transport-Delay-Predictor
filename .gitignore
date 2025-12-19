@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+pipeline.log
+pipeline_output.log
+/tmp/
+
+# Model files (large)
+*.pkl
+*.joblib
+*.h5
+*.pb
+
+# Data files (large)
+*.csv
+!ml_pipeline/data/.gitkeep
+ml_pipeline/data/*.csv
+
+# Outputs
+ml_pipeline/outputs/
+!ml_pipeline/outputs/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backend
+backend/ml_models/*.pkl
+backend/ml_models/*.json
+!backend/ml_models/.gitkeep
+
+# Process IDs
+*.pid
+
+# Node (if any)
+node_modules/
+package-lock.json
+
