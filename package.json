@@ -1,0 +1,12 @@
+{
+  "name": "transport-delay-predictor",
+  "version": "1.0.0",
+  "description": "AI-powered transport delay prediction tool",
+  "scripts": {
+    "build": "echo 'No build step needed for static site'"
+  },
+  "keywords": ["transport", "delay", "prediction", "ml"],
+  "author": "",
+  "license": "MIT"
+}
+

@@ -1,0 +1,11 @@
+backend/
+ml_pipeline/
+*.pkl
+*.csv
+*.log
+venv/
+__pycache__/
+*.pyc
+.env
+file2/
+*.md

@@ -4,8 +4,24 @@
 
 // API Configuration
 // Can be overridden by setting window.API_BASE_URL before script loads
+// For Vercel: Set environment variable NEXT_PUBLIC_API_BASE_URL or use window.API_BASE_URL
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    // Check for Vercel environment variable (prefixed with NEXT_PUBLIC_)
+    if (window.NEXT_PUBLIC_API_BASE_URL) {
+      return window.NEXT_PUBLIC_API_BASE_URL;
+    }
+    // Check for custom window variable
+    if (window.API_BASE_URL) {
+      return window.API_BASE_URL;
+    }
+  }
+  // Default to localhost for development
+  return 'http://localhost:5000/api/v1';
+};
+
 const API_CONFIG = {
-  baseURL: (typeof window !== 'undefined' && window.API_BASE_URL) || 'http://localhost:5000/api/v1',
+  baseURL: getApiBaseUrl(),
   endpoints: {
     predict: '/predict'
   },
