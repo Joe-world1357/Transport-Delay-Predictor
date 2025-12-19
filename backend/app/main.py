@@ -45,6 +45,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve static files for visualizations
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
+
+viz_dir = Path(__file__).parent.parent / "ml_pipeline" / "outputs" / "visualizations"
+if viz_dir.exists():
+    app.mount("/api/v1/visualizations", StaticFiles(directory=str(viz_dir)), name="visualizations")
+
 # Register routes
 app.include_router(
     prediction.router,

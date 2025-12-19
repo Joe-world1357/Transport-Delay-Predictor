@@ -204,6 +204,143 @@ async def upload_dataset(file: UploadFile = File(..., description="CSV dataset f
         )
 
 
+@router.get("/dataset-preview")
+async def get_dataset_preview() -> Dict:
+    """
+    Get dataset preview and statistics
+    
+    Returns:
+        Dataset preview (first 10 rows) and statistics
+    """
+    try:
+        # Get project root
+        project_root = Path(__file__).parent.parent.parent.parent.parent
+        cleaned_path = project_root / "ml_pipeline" / "outputs" / "cleaned_dataset.csv"
+        
+        if not cleaned_path.exists():
+            return {
+                "preview": [],
+                "stats": {},
+                "message": "No dataset available. Upload and train models first."
+            }
+        
+        df = pd.read_csv(cleaned_path)
+        
+        # Get statistics
+        stats = {
+            "total_records": len(df),
+            "total_features": len(df.columns),
+        }
+        
+        # Add delay statistics if available
+        if 'delay_minutes' in df.columns:
+            stats.update({
+                "mean_delay": float(df['delay_minutes'].mean()),
+                "max_delay": float(df['delay_minutes'].max()),
+                "min_delay": float(df['delay_minutes'].min()),
+                "std_delay": float(df['delay_minutes'].std())
+            })
+        
+        # Get preview (first 10 rows)
+        preview = df.head(10).to_dict('records')
+        
+        return {
+            "preview": preview,
+            "stats": stats,
+            "message": "Dataset preview loaded"
+        }
+    
+    except Exception as e:
+        logger.error(f"Error loading dataset preview: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to load dataset preview: {str(e)}"
+        )
+
+
+@router.get("/eda-visualizations")
+async def get_eda_visualizations() -> Dict:
+    """
+    Get EDA visualization URLs
+    
+    Returns:
+        Dictionary with visualization image URLs/paths
+    """
+    try:
+        # Get project root
+        project_root = Path(__file__).parent.parent.parent.parent.parent
+        viz_dir = project_root / "ml_pipeline" / "outputs" / "visualizations"
+        
+        visualizations = {}
+        
+        # Map visualization files
+        viz_files = {
+            "delay_distribution": "delay_distribution.png",
+            "weather_impact": "weather_impact.png",
+            "time_of_day_impact": "time_of_day_impact.png",
+            "feature_importance": "feature_importance_gradient_boosting.png"
+        }
+        
+        for key, filename in viz_files.items():
+            file_path = viz_dir / filename
+            if file_path.exists():
+                # Return relative path that frontend can access
+                visualizations[key] = f"/api/v1/visualizations/{filename}"
+        
+        return {
+            "visualizations": visualizations,
+            "message": "Visualizations loaded"
+        }
+    
+    except Exception as e:
+        logger.error(f"Error loading visualizations: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to load visualizations: {str(e)}"
+        )
+
+
+@router.get("/visualizations/{filename}")
+async def get_visualization(filename: str):
+    """
+    Serve visualization images
+    
+    Args:
+        filename: Name of the visualization file
+        
+    Returns:
+        Image file
+    """
+    from fastapi.responses import FileResponse
+    
+    try:
+        # Get project root
+        project_root = Path(__file__).parent.parent.parent.parent.parent
+        viz_dir = project_root / "ml_pipeline" / "outputs" / "visualizations"
+        file_path = viz_dir / filename
+        
+        if not file_path.exists():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Visualization {filename} not found"
+            )
+        
+        return FileResponse(
+            str(file_path),
+            media_type="image/png",
+            filename=filename
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error serving visualization: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to serve visualization: {str(e)}"
+        )
+
+
 @router.get("/model-comparison")
 async def get_model_comparison() -> Dict:
     """

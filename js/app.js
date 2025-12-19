@@ -632,6 +632,14 @@ uploadBtn?.addEventListener('click', async () => {
     
     showToast('Models trained successfully! You can now select different algorithms.', 'success');
     
+    // Show data exploration section
+    showDataExploration();
+    
+    // Auto-load visualizations
+    setTimeout(() => {
+      loadVisualizationsBtn?.click();
+    }, 1000);
+    
   } catch (error) {
     uploadStatus.textContent = `❌ Error: ${error.message}`;
     uploadStatus.className = 'upload-status error';
@@ -708,6 +716,256 @@ function updateModelSelect(models) {
 viewComparisonBtn?.addEventListener('click', () => {
   loadModelComparison();
 });
+
+// ============================================
+// Data Exploration & EDA
+// ============================================
+
+const dataExplorationCard = document.getElementById('dataExplorationCard');
+const loadDataPreviewBtn = document.getElementById('loadDataPreviewBtn');
+const dataTableContainer = document.getElementById('dataTableContainer');
+const dataTableHead = document.getElementById('dataTableHead');
+const dataTableBody = document.getElementById('dataTableBody');
+const statsGrid = document.getElementById('statsGrid');
+const loadVisualizationsBtn = document.getElementById('loadVisualizationsBtn');
+
+// Load dataset preview
+loadDataPreviewBtn?.addEventListener('click', async () => {
+  try {
+    loadDataPreviewBtn.disabled = true;
+    loadDataPreviewBtn.textContent = 'Loading...';
+    
+    // Get base URL (API_CONFIG.baseURL already includes /api/v1)
+    const baseUrl = (typeof API_CONFIG !== 'undefined' && API_CONFIG.baseURL) 
+      ? API_CONFIG.baseURL.replace(/\/api\/v1$/, '') 
+      : 'http://localhost:5000';
+    const response = await fetch(`${baseUrl}/api/v1/dataset-preview`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Preview response error:', response.status, errorText);
+      throw new Error(`Failed to load dataset preview: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    // Display statistics
+    if (data.stats && statsGrid) {
+      displayDatasetStats(data.stats);
+    }
+    
+    // Display preview table
+    if (data.preview && data.preview.length > 0) {
+      displayDataPreview(data.preview);
+      dataTableContainer.style.display = 'block';
+    }
+    
+    loadDataPreviewBtn.textContent = 'Load Dataset Preview';
+    loadDataPreviewBtn.disabled = false;
+    dataExplorationCard.style.display = 'block';
+    
+  } catch (error) {
+    console.error('Error loading data preview:', error);
+    loadDataPreviewBtn.textContent = 'Load Dataset Preview';
+    loadDataPreviewBtn.disabled = false;
+    showErrorToast(`Failed to load dataset preview: ${error.message}`);
+  }
+});
+
+// Load EDA visualizations
+loadVisualizationsBtn?.addEventListener('click', async () => {
+  try {
+    loadVisualizationsBtn.disabled = true;
+    loadVisualizationsBtn.textContent = 'Loading visualizations...';
+    
+    // Get base URL (API_CONFIG.baseURL already includes /api/v1)
+    const baseUrl = (typeof API_CONFIG !== 'undefined' && API_CONFIG.baseURL) 
+      ? API_CONFIG.baseURL.replace(/\/api\/v1$/, '') 
+      : 'http://localhost:5000';
+    const response = await fetch(`${baseUrl}/api/v1/eda-visualizations`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Visualizations response error:', response.status, errorText);
+      throw new Error(`Failed to load visualizations: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    // Display visualizations
+    if (data.visualizations) {
+      displayEDAVisualizations(data.visualizations);
+    }
+    
+    loadVisualizationsBtn.textContent = 'Load All Visualizations';
+    loadVisualizationsBtn.disabled = false;
+    
+  } catch (error) {
+    console.error('Error loading visualizations:', error);
+    loadVisualizationsBtn.textContent = 'Load All Visualizations';
+    loadVisualizationsBtn.disabled = false;
+    showErrorToast(`Failed to load visualizations: ${error.message}`);
+  }
+});
+
+function displayDatasetStats(stats) {
+  if (!statsGrid) return;
+  
+  statsGrid.innerHTML = '';
+  
+  const statItems = [
+    { label: 'Total Records', value: stats.total_records || 'N/A' },
+    { label: 'Features', value: stats.total_features || 'N/A' },
+    { label: 'Mean Delay', value: stats.mean_delay ? `${stats.mean_delay.toFixed(1)} min` : 'N/A' },
+    { label: 'Max Delay', value: stats.max_delay ? `${stats.max_delay.toFixed(1)} min` : 'N/A' },
+    { label: 'Min Delay', value: stats.min_delay ? `${stats.min_delay.toFixed(1)} min` : 'N/A' },
+    { label: 'Std Deviation', value: stats.std_delay ? `${stats.std_delay.toFixed(1)}` : 'N/A' }
+  ];
+  
+  statItems.forEach(stat => {
+    const card = document.createElement('div');
+    card.className = 'stat-card';
+    card.innerHTML = `
+      <span class="stat-value">${stat.value}</span>
+      <span class="stat-label">${stat.label}</span>
+    `;
+    statsGrid.appendChild(card);
+  });
+}
+
+function displayDataPreview(preview) {
+  if (!preview || preview.length === 0) {
+    console.warn('No preview data to display');
+    return;
+  }
+  
+  // Clear existing content
+  if (!dataTableHead || !dataTableBody) {
+    console.error('Table elements not found');
+    return;
+  }
+  
+  dataTableHead.innerHTML = '';
+  dataTableBody.innerHTML = '';
+  
+  // Get column names from first row
+  const columns = Object.keys(preview[0]);
+  
+  // Create header
+  const headerRow = document.createElement('tr');
+  columns.forEach(col => {
+    const th = document.createElement('th');
+    th.textContent = formatFeatureName(col);
+    headerRow.appendChild(th);
+  });
+  dataTableHead.appendChild(headerRow);
+  
+  // Create rows
+  preview.forEach(row => {
+    const tr = document.createElement('tr');
+    columns.forEach(col => {
+      const td = document.createElement('td');
+      let value = row[col];
+      
+      // Format values
+      if (value === null || value === undefined) {
+        value = 'N/A';
+      } else if (typeof value === 'number') {
+        value = value.toFixed(2);
+      } else {
+        value = String(value);
+      }
+      
+      td.textContent = value;
+      tr.appendChild(td);
+    });
+    dataTableBody.appendChild(tr);
+  });
+}
+
+function displayEDAVisualizations(visualizations) {
+  if (!visualizations) {
+    console.warn('No visualizations data provided');
+    return;
+  }
+  
+  // Get base URL for images
+  const baseUrl = (typeof API_CONFIG !== 'undefined' && API_CONFIG.baseURL) 
+    ? API_CONFIG.baseURL.replace(/\/api\/v1$/, '') 
+    : 'http://localhost:5000';
+  
+  // Delay Distribution
+  if (visualizations.delay_distribution) {
+    const img = document.getElementById('delayDistImg');
+    const placeholder = document.getElementById('delayDistViz');
+    if (img && placeholder) {
+      // Ensure full URL if relative path
+      const imgSrc = visualizations.delay_distribution.startsWith('http') 
+        ? visualizations.delay_distribution 
+        : `${baseUrl}${visualizations.delay_distribution}`;
+      img.src = imgSrc;
+      img.style.display = 'block';
+      const pTag = placeholder.querySelector('p');
+      if (pTag) pTag.style.display = 'none';
+    }
+  }
+  
+  // Weather Impact
+  if (visualizations.weather_impact) {
+    const img = document.getElementById('weatherImpactImg');
+    const placeholder = document.getElementById('weatherImpactViz');
+    if (img && placeholder) {
+      const imgSrc = visualizations.weather_impact.startsWith('http') 
+        ? visualizations.weather_impact 
+        : `${baseUrl}${visualizations.weather_impact}`;
+      img.src = imgSrc;
+      img.style.display = 'block';
+      const pTag = placeholder.querySelector('p');
+      if (pTag) pTag.style.display = 'none';
+    }
+  }
+  
+  // Time of Day Impact
+  if (visualizations.time_of_day_impact) {
+    const img = document.getElementById('timeOfDayImg');
+    const placeholder = document.getElementById('timeOfDayViz');
+    if (img && placeholder) {
+      const imgSrc = visualizations.time_of_day_impact.startsWith('http') 
+        ? visualizations.time_of_day_impact 
+        : `${baseUrl}${visualizations.time_of_day_impact}`;
+      img.src = imgSrc;
+      img.style.display = 'block';
+      const pTag = placeholder.querySelector('p');
+      if (pTag) pTag.style.display = 'none';
+    }
+  }
+  
+  // Feature Importance
+  if (visualizations.feature_importance) {
+    const img = document.getElementById('featureImportanceImg');
+    const placeholder = document.getElementById('featureImportanceViz');
+    if (img && placeholder) {
+      const imgSrc = visualizations.feature_importance.startsWith('http') 
+        ? visualizations.feature_importance 
+        : `${baseUrl}${visualizations.feature_importance}`;
+      img.src = imgSrc;
+      img.style.display = 'block';
+      const pTag = placeholder.querySelector('p');
+      if (pTag) pTag.style.display = 'none';
+    }
+  }
+}
+
+// Auto-load data exploration after successful upload
+function showDataExploration() {
+  if (dataExplorationCard) {
+    dataExplorationCard.style.display = 'block';
+    // Scroll to exploration section
+    setTimeout(() => {
+      dataExplorationCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
+}
 
 // ============================================
 // Initialize

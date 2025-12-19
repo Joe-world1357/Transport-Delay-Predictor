@@ -267,6 +267,77 @@
           </div>
         </div>
 
+        <!-- Data Exploration & EDA Section -->
+        <div class="card" id="dataExplorationCard" style="display: none;">
+          <div class="card-header">
+            <h2>📊 Data Exploration & Analysis</h2>
+            <p>Explore your dataset and view analysis results</p>
+          </div>
+
+          <!-- Dataset Statistics -->
+          <div class="data-stats" id="dataStats">
+            <h3>Dataset Statistics</h3>
+            <div class="stats-grid" id="statsGrid">
+              <!-- Will be populated by JavaScript -->
+            </div>
+          </div>
+
+          <!-- Data Preview -->
+          <div class="data-preview" id="dataPreview">
+            <h3>Data Preview</h3>
+            <div class="preview-controls">
+              <button type="button" class="btn-secondary" id="loadDataPreviewBtn">
+                Load Dataset Preview
+              </button>
+              <span class="helper-text">View first 10 rows of your dataset</span>
+            </div>
+            <div class="table-container" id="dataTableContainer" style="display: none;">
+              <table class="data-table" id="dataTable">
+                <thead id="dataTableHead"></thead>
+                <tbody id="dataTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- EDA Visualizations -->
+          <div class="eda-visualizations" id="edaVisualizations">
+            <h3>Exploratory Data Analysis</h3>
+            <div class="visualization-grid">
+              <div class="viz-card">
+                <h4>Delay Distribution</h4>
+                <div class="viz-placeholder" id="delayDistViz">
+                  <p>Visualization will appear after training</p>
+                  <img id="delayDistImg" src="" alt="Delay Distribution" style="display: none; max-width: 100%;">
+                </div>
+              </div>
+              <div class="viz-card">
+                <h4>Weather Impact</h4>
+                <div class="viz-placeholder" id="weatherImpactViz">
+                  <p>Visualization will appear after training</p>
+                  <img id="weatherImpactImg" src="" alt="Weather Impact" style="display: none; max-width: 100%;">
+                </div>
+              </div>
+              <div class="viz-card">
+                <h4>Time of Day Impact</h4>
+                <div class="viz-placeholder" id="timeOfDayViz">
+                  <p>Visualization will appear after training</p>
+                  <img id="timeOfDayImg" src="" alt="Time of Day Impact" style="display: none; max-width: 100%;">
+                </div>
+              </div>
+              <div class="viz-card">
+                <h4>Feature Importance</h4>
+                <div class="viz-placeholder" id="featureImportanceViz">
+                  <p>Visualization will appear after training</p>
+                  <img id="featureImportanceImg" src="" alt="Feature Importance" style="display: none; max-width: 100%;">
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn-secondary" id="loadVisualizationsBtn">
+              Load All Visualizations
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </main>
